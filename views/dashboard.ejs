@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="dashboard-body">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <span class="logo-text">Sistema de Senhas</span>
+            </div>
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="#dashboard" class="nav-link active" data-page="dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#passwords" class="nav-link" data-page="passwords">
+                        <i class="fas fa-key"></i>
+                        <span class="nav-text">Senhas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#groups" class="nav-link" data-page="groups">
+                        <i class="fas fa-layer-group"></i>
+                        <span class="nav-text">Grupos</span>
+                    </a>
+                </li>
+                <li class="nav-item admin-only" style="display: none;">
+                    <a href="#users" class="nav-link" data-page="users">
+                        <i class="fas fa-users"></i>
+                        <span class="nav-text">Usuários</span>
+                    </a>
+                </li>
+                <li class="nav-item admin-only" style="display: none;">
+                    <a href="#logs" class="nav-link" data-page="logs">
+                        <i class="fas fa-history"></i>
+                        <span class="nav-text">Logs</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-details">
+                    <span class="user-name" id="userName">Carregando...</span>
+                    <span class="user-role" id="userRole">Usuário</span>
+                </div>
+            </div>
+            <button class="logout-btn" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span class="nav-text">Sair</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="page-title" id="pageTitle">Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Buscar senhas..." id="globalSearch">
+                </div>
+                <button class="notification-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+                <div class="user-menu">
+                    <button class="user-menu-toggle" id="userMenuToggle">
+                        <div class="user-avatar-small">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="user-menu-dropdown" id="userMenuDropdown">
+                        <a href="#profile" class="dropdown-item">
+                            <i class="fas fa-user-cog"></i>
+                            Perfil
+                        </a>
+                        <a href="#settings" class="dropdown-item">
+                            <i class="fas fa-cog"></i>
+                            Configurações
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#logout" class="dropdown-item" id="headerLogout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Sair
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="content-area" id="contentArea">
+            <!-- Dashboard Content -->
+            <div class="page-content" id="dashboardContent">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-key"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 class="stat-number" id="totalPasswords">0</h3>
+                            <p class="stat-label">Total de Senhas</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 class="stat-number" id="totalGroups">0</h3>
+                            <p class="stat-label">Grupos Ativos</p>
+                        </div>
+                    </div>
+                    <div class="stat-card admin-only" style="display: none;">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 class="stat-number" id="totalUsers">0</h3>
+                            <p class="stat-label">Usuários</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 class="stat-number" id="recentAccess">0</h3>
+                            <p class="stat-label">Acessos Hoje</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Senhas Recentes</h3>
+                            <a href="#passwords" class="view-all-link">Ver todas</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="recent-passwords" id="recentPasswords">
+                                <div class="loading-placeholder">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    Carregando...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Grupos de Senhas</h3>
+                            <a href="#groups" class="view-all-link">Gerenciar</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="groups-overview" id="groupsOverview">
+                                <div class="loading-placeholder">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    Carregando...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Outros conteúdos das páginas serão carregados dinamicamente aqui -->
+            <div class="page-content" id="passwordsContent" style="display: none;">
+                <h2>Gerenciamento de Senhas</h2>
+                <p>Conteúdo da página de senhas será carregado aqui...</p>
+            </div>
+
+            <div class="page-content" id="groupsContent" style="display: none;">
+                <h2>Gerenciamento de Grupos</h2>
+                <p>Conteúdo da página de grupos será carregado aqui...</p>
+            </div>
+
+            <div class="page-content" id="usersContent" style="display: none;">
+                <h2>Gerenciamento de Usuários</h2>
+                <p>Conteúdo da página de usuários será carregado aqui...</p>
+            </div>
+
+            <div class="page-content" id="logsContent" style="display: none;">
+                <h2>Logs do Sistema</h2>
+                <p>Conteúdo da página de logs será carregado aqui...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Overlay para mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Scripts -->
+    <script src="/js/dashboard.js"></script>
+    <script src="/js/auth.js"></script>
+</body>
+</html>
+

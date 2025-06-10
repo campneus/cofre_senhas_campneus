@@ -1,0 +1,41 @@
+# Render Deploy Configuration
+
+# Build Command
+npm install
+
+# Start Command  
+npm start
+
+# Environment
+NODE_ENV=production
+
+# Health Check Path
+/health
+
+# Auto Deploy
+true
+
+# Branch
+main
+
+# Root Directory
+./
+
+# Node Version
+18.x
+
+# Build Settings
+BUILD_COMMAND=npm install
+START_COMMAND=npm start
+
+# Environment Variables Required:
+# NODE_ENV=production
+# PORT=3000
+# DATABASE_URL=postgresql://senhas_campneus_owner:npg_MXP5UK4CqToH@ep-crimson-meadow-a8krhs13-pooler.eastus2.azure.neon.tech/senhas_campneus?sslmode=require
+# FIREBASE_PROJECT_ID=campneus-dashboard
+# FIREBASE_PRIVATE_KEY_ID=<your_private_key_id>
+# FIREBASE_PRIVATE_KEY=<your_private_key>
+# FIREBASE_CLIENT_EMAIL=<your_client_email>
+# FIREBASE_CLIENT_ID=<your_client_id>
+# FIREBASE_CLIENT_CERT_URL=<your_cert_url>
+
