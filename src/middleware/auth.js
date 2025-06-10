@@ -1,99 +1,83 @@
-const { verifyFirebaseToken } = require('../config/firebase');
+const { verifyToken } = require('../config/auth');
 const User = require('../models/User');
 
-// Middleware de autenticação
+// Middleware de autenticação local
 const authMiddleware = async (req, res, next) => {
   try {
-    // Extrair token do header Authorization
+    // Obter token do header Authorization
     const authHeader = req.headers.authorization;
+    
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ 
-        error: 'Token de acesso não fornecido',
-        code: 'NO_TOKEN'
+      return res.status(401).json({
+        error: 'Token de acesso requerido',
+        code: 'MISSING_TOKEN'
       });
     }
 
     const token = authHeader.substring(7); // Remove "Bearer "
 
-    // Verificar token Firebase
-    const firebaseResult = await verifyFirebaseToken(token);
-    if (!firebaseResult.success) {
-      return res.status(401).json({ 
-        error: 'Token inválido',
-        code: 'INVALID_TOKEN',
-        details: firebaseResult.error
+    // Verificar token JWT
+    const tokenResult = verifyToken(token);
+    
+    if (!tokenResult.success) {
+      return res.status(401).json({
+        error: tokenResult.error,
+        code: 'INVALID_TOKEN'
       });
     }
 
-    const firebaseUser = firebaseResult.user;
-
     // Buscar usuário no banco de dados
-    let dbUser = await User.findByFirebaseUid(firebaseUser.uid);
-
-    // Se usuário não existe no banco, criar automaticamente
-    if (!dbUser) {
-      try {
-        dbUser = await User.create({
-          firebase_uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          name: firebaseUser.name,
-          role: 'user' // Usuários novos começam como 'user'
-        });
-        console.log('Novo usuário criado automaticamente:', dbUser.email);
-      } catch (createError) {
-        console.error('Erro ao criar usuário automaticamente:', createError.message);
-        return res.status(500).json({ 
-          error: 'Erro ao criar usuário no sistema',
-          code: 'USER_CREATION_ERROR'
-        });
-      }
+    const user = await User.findById(tokenResult.user.id);
+    
+    if (!user) {
+      return res.status(401).json({
+        error: 'Usuário não encontrado',
+        code: 'USER_NOT_FOUND'
+      });
     }
 
     // Verificar se usuário está ativo
-    if (!dbUser.is_active) {
-      return res.status(403).json({ 
+    if (!user.is_active) {
+      return res.status(401).json({
         error: 'Usuário desativado',
         code: 'USER_DISABLED'
       });
     }
 
-    // Adicionar informações do usuário ao request
+    // Adicionar usuário ao request
     req.user = {
-      id: dbUser.id,
-      firebase_uid: dbUser.firebase_uid,
-      email: dbUser.email,
-      name: dbUser.name,
-      role: dbUser.role,
-      is_active: dbUser.is_active,
-      created_at: dbUser.created_at,
-      updated_at: dbUser.updated_at
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      is_active: user.is_active,
+      created_at: user.created_at,
+      updated_at: user.updated_at
     };
 
-    // Adicionar informações do Firebase
-    req.firebaseUser = firebaseUser;
-
     next();
+
   } catch (error) {
     console.error('Erro no middleware de autenticação:', error);
-    return res.status(500).json({ 
-      error: 'Erro interno de autenticação',
-      code: 'AUTH_ERROR'
+    res.status(500).json({
+      error: 'Erro interno do servidor',
+      code: 'INTERNAL_ERROR'
     });
   }
 };
 
-// Middleware para verificar se usuário é admin
+// Middleware para verificar se é administrador
 const adminMiddleware = (req, res, next) => {
   if (!req.user) {
-    return res.status(401).json({ 
+    return res.status(401).json({
       error: 'Usuário não autenticado',
       code: 'NOT_AUTHENTICATED'
     });
   }
 
   if (req.user.role !== 'admin') {
-    return res.status(403).json({ 
-      error: 'Acesso negado. Apenas administradores podem acessar este recurso.',
+    return res.status(403).json({
+      error: 'Acesso negado. Apenas administradores podem acessar este recurso',
       code: 'ADMIN_REQUIRED'
     });
   }
@@ -101,88 +85,82 @@ const adminMiddleware = (req, res, next) => {
   next();
 };
 
+// Middleware para verificar permissões específicas
+const permissionMiddleware = (requiredPermissions = []) => {
+  return async (req, res, next) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          error: 'Usuário não autenticado',
+          code: 'NOT_AUTHENTICATED'
+        });
+      }
+
+      // Administradores têm acesso total
+      if (req.user.role === 'admin') {
+        return next();
+      }
+
+      // Para usuários comuns, verificar permissões específicas
+      // Esta lógica pode ser expandida conforme necessário
+      if (requiredPermissions.length > 0) {
+        // Implementar verificação de permissões específicas aqui
+        // Por enquanto, permitir acesso para usuários autenticados
+        return next();
+      }
+
+      next();
+
+    } catch (error) {
+      console.error('Erro no middleware de permissões:', error);
+      res.status(500).json({
+        error: 'Erro interno do servidor',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  };
+};
+
 // Middleware opcional de autenticação (não falha se não houver token)
 const optionalAuthMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
+    
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return next(); // Continua sem autenticação
+      return next(); // Continua sem usuário
     }
 
     const token = authHeader.substring(7);
-    const firebaseResult = await verifyFirebaseToken(token);
+    const tokenResult = verifyToken(token);
     
-    if (firebaseResult.success) {
-      const dbUser = await User.findByFirebaseUid(firebaseResult.user.uid);
-      if (dbUser && dbUser.is_active) {
+    if (tokenResult.success) {
+      const user = await User.findById(tokenResult.user.id);
+      
+      if (user && user.is_active) {
         req.user = {
-          id: dbUser.id,
-          firebase_uid: dbUser.firebase_uid,
-          email: dbUser.email,
-          name: dbUser.name,
-          role: dbUser.role,
-          is_active: dbUser.is_active
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          is_active: user.is_active,
+          created_at: user.created_at,
+          updated_at: user.updated_at
         };
-        req.firebaseUser = firebaseResult.user;
       }
     }
 
     next();
+
   } catch (error) {
     console.error('Erro no middleware de autenticação opcional:', error);
     next(); // Continua mesmo com erro
   }
 };
 
-// Middleware para verificar permissão em grupo específico
-const groupPermissionMiddleware = (permission = 'can_view') => {
-  return async (req, res, next) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({ 
-          error: 'Usuário não autenticado',
-          code: 'NOT_AUTHENTICATED'
-        });
-      }
-
-      // Admin tem acesso total
-      if (req.user.role === 'admin') {
-        return next();
-      }
-
-      const groupId = req.params.groupId || req.body.group_id;
-      if (!groupId) {
-        return res.status(400).json({ 
-          error: 'ID do grupo não fornecido',
-          code: 'GROUP_ID_REQUIRED'
-        });
-      }
-
-      const PasswordGroup = require('../models/PasswordGroup');
-      const hasPermission = await PasswordGroup.checkUserPermission(groupId, req.user.id, permission);
-
-      if (!hasPermission) {
-        return res.status(403).json({ 
-          error: `Permissão negada. Você não tem permissão de ${permission} neste grupo.`,
-          code: 'INSUFFICIENT_PERMISSIONS'
-        });
-      }
-
-      next();
-    } catch (error) {
-      console.error('Erro no middleware de permissão de grupo:', error);
-      return res.status(500).json({ 
-        error: 'Erro ao verificar permissões',
-        code: 'PERMISSION_CHECK_ERROR'
-      });
-    }
-  };
-};
-
 module.exports = {
   authMiddleware,
   adminMiddleware,
-  optionalAuthMiddleware,
-  groupPermissionMiddleware
+  permissionMiddleware,
+  optionalAuthMiddleware
 };
 

@@ -205,59 +205,25 @@
     left: 100%;
 }
 
-.divider {
+.forgot-password {
     text-align: center;
-    margin: 1.5rem 0;
-    position: relative;
+    margin-top: 1rem;
 }
 
-.divider::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background-color: var(--gray-medium);
-}
-
-.divider span {
-    background-color: var(--primary-white);
-    padding: 0 1rem;
-    color: var(--gray-dark);
-    font-size: var(--font-size-small);
-    position: relative;
-    z-index: 1;
-}
-
-.google-btn {
-    width: 100%;
-    background-color: var(--primary-white);
-    color: var(--primary-black);
-    border: 2px solid var(--gray-medium);
-    padding: 1rem;
-    border-radius: var(--border-radius);
-    font-size: var(--font-size-base);
+.forgot-password a {
+    color: var(--primary-yellow);
+    text-decoration: none;
     font-weight: 600;
-    cursor: pointer;
+    font-size: var(--font-size-small);
     transition: all var(--transition-fast);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    min-height: 52px;
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
 }
 
-.google-btn:hover {
-    background-color: var(--gray-light);
-    border-color: var(--gray-dark);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-medium);
-}
-
-.google-btn i {
-    font-size: 1.25rem;
-    color: #4285f4;
+.forgot-password a:hover {
+    color: var(--yellow-dark);
+    background-color: var(--yellow-light);
+    text-decoration: underline;
 }
 
 .login-footer {
@@ -273,10 +239,7 @@
     margin: 0;
 }
 
-.error-message {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+.message {
     border-radius: var(--border-radius);
     padding: 1rem;
     margin-bottom: 1rem;
@@ -284,6 +247,24 @@
     align-items: center;
     gap: 0.5rem;
     animation: slideDown 0.3s ease-out;
+}
+
+.error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.success-message {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.info-message {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
 }
 
 @keyframes slideDown {
@@ -297,12 +278,21 @@
     }
 }
 
-.error-message i {
+.message i {
     font-size: 1.25rem;
 }
 
 .loading-icon {
     animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Padrão de fundo animado */

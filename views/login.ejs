@@ -46,14 +46,9 @@
                     </button>
                 </form>
 
-                <div class="divider">
-                    <span>ou</span>
+                <div class="forgot-password">
+                    <a href="#" id="forgotPasswordLink">Esqueci minha senha</a>
                 </div>
-
-                <button type="button" class="google-btn" id="googleBtn">
-                    <i class="fab fa-google"></i>
-                    <span>Entrar com Google</span>
-                </button>
             </div>
 
             <div class="login-footer">
@@ -64,31 +59,11 @@
         <div class="background-pattern"></div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-
-        // Configuração do Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyC9b7BXNm8HijR-k-GZUJeCJn5gT0rKBbk",
-            authDomain: "campneus-dashboard.firebaseapp.com",
-            projectId: "campneus-dashboard",
-            storageBucket: "campneus-dashboard.firebasestorage.app",
-            messagingSenderId: "172203992376",
-            appId: "1:172203992376:web:91d4ddf048071f110d8dcd",
-            measurementId: "G-E6MZYD2YXG"
-        };
-
-        // Inicializar Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
-
+    <script>
         // Elementos do DOM
         const loginForm = document.getElementById('loginForm');
-        const googleBtn = document.getElementById('googleBtn');
         const loginBtn = document.getElementById('loginBtn');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
 
         // Login com email e senha
         loginForm.addEventListener('submit', async (e) => {
@@ -100,66 +75,90 @@
             setLoading(true);
             
             try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-                const token = await user.getIdToken();
-                
-                // Verificar token no backend
-                await verifyTokenAndRedirect(token);
-                
-            } catch (error) {
-                console.error('Erro no login:', error);
-                showError('Erro ao fazer login: ' + error.message);
-                setLoading(false);
-            }
-        });
-
-        // Login com Google
-        googleBtn.addEventListener('click', async () => {
-            try {
-                const result = await signInWithPopup(auth, provider);
-                const user = result.user;
-                const token = await user.getIdToken();
-                
-                // Verificar token no backend
-                await verifyTokenAndRedirect(token);
-                
-            } catch (error) {
-                console.error('Erro no login com Google:', error);
-                showError('Erro ao fazer login com Google: ' + error.message);
-            }
-        });
-
-        // Verificar token no backend e redirecionar
-        async function verifyTokenAndRedirect(token) {
-            try {
-                const response = await fetch('/api/auth/verify', {
+                const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ token })
+                    body: JSON.stringify({ email, password })
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
                     // Salvar token no localStorage
-                    localStorage.setItem('authToken', token);
+                    localStorage.setItem('authToken', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
                     
-                    // Redirecionar para dashboard
-                    window.location.href = '/dashboard';
+                    showSuccess('Login realizado com sucesso!');
+                    
+                    // Redirecionar para dashboard após 1 segundo
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1000);
                 } else {
-                    throw new Error(data.error || 'Erro na verificação do token');
+                    throw new Error(data.error || 'Erro no login');
                 }
                 
             } catch (error) {
-                console.error('Erro na verificação:', error);
-                showError('Erro na verificação: ' + error.message);
+                console.error('Erro no login:', error);
+                let errorMessage = 'Erro ao fazer login';
+                
+                // Personalizar mensagens de erro baseadas no código
+                if (error.message.includes('INVALID_CREDENTIALS')) {
+                    errorMessage = 'Email ou senha incorretos';
+                } else if (error.message.includes('USER_DISABLED')) {
+                    errorMessage = 'Usuário desativado. Entre em contato com o administrador';
+                } else if (error.message.includes('MISSING_CREDENTIALS')) {
+                    errorMessage = 'Email e senha são obrigatórios';
+                } else {
+                    errorMessage = error.message;
+                }
+                
+                showError(errorMessage);
                 setLoading(false);
             }
-        }
+        });
+
+        // Esqueci minha senha
+        forgotPasswordLink.addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            
+            if (!email) {
+                showError('Por favor, digite seu e-mail antes de clicar em "Esqueci minha senha"');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/forgot-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(data.message);
+                    
+                    // Se estiver em desenvolvimento, mostrar o token
+                    if (data.resetToken) {
+                        console.log('Token de recuperação:', data.resetToken);
+                        showInfo('Token de recuperação foi exibido no console (apenas desenvolvimento)');
+                    }
+                } else {
+                    throw new Error(data.error || 'Erro ao solicitar recuperação de senha');
+                }
+                
+            } catch (error) {
+                console.error('Erro ao solicitar recuperação:', error);
+                showError(error.message || 'Erro ao solicitar recuperação de senha');
+            }
+        });
 
         // Função para mostrar loading
         function setLoading(loading) {
@@ -179,43 +178,91 @@
 
         // Função para mostrar erro
         function showError(message) {
-            // Remover erro anterior se existir
-            const existingError = document.querySelector('.error-message');
-            if (existingError) {
-                existingError.remove();
+            showMessage(message, 'error');
+        }
+
+        // Função para mostrar sucesso
+        function showSuccess(message) {
+            showMessage(message, 'success');
+        }
+
+        // Função para mostrar informação
+        function showInfo(message) {
+            showMessage(message, 'info');
+        }
+
+        // Função para mostrar mensagem
+        function showMessage(message, type) {
+            // Remover mensagem anterior se existir
+            const existingMessage = document.querySelector('.message');
+            if (existingMessage) {
+                existingMessage.remove();
             }
 
-            // Criar elemento de erro
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            errorDiv.innerHTML = `
-                <i class="fas fa-exclamation-triangle"></i>
+            // Criar elemento de mensagem
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            
+            let icon = 'fa-exclamation-triangle';
+            if (type === 'success') icon = 'fa-check-circle';
+            if (type === 'info') icon = 'fa-info-circle';
+            
+            messageDiv.innerHTML = `
+                <i class="fas ${icon}"></i>
                 <span>${message}</span>
             `;
 
             // Inserir antes do formulário
             const formContainer = document.querySelector('.login-form-container');
-            formContainer.insertBefore(errorDiv, formContainer.firstChild);
+            formContainer.insertBefore(messageDiv, formContainer.firstChild);
 
             // Remover após 5 segundos
             setTimeout(() => {
-                errorDiv.remove();
+                messageDiv.remove();
             }, 5000);
+        }
+
+        // Função para toggle da senha
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
         }
 
         // Verificar se já está logado
         const token = localStorage.getItem('authToken');
         if (token) {
             // Verificar se token ainda é válido
-            verifyTokenAndRedirect(token).catch(() => {
+            fetch('/api/auth/verify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ token })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Token válido, redirecionar para dashboard
+                    window.location.href = '/dashboard';
+                }
+            })
+            .catch(() => {
                 // Token inválido, limpar localStorage
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('user');
             });
         }
     </script>
-
-    <script src="/js/login.js"></script>
 </body>
 </html>
 

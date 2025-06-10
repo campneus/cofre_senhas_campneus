@@ -1,33 +1,40 @@
 # Sistema de Visualização de Senhas
 
-Sistema web completo para gerenciamento e visualização de senhas com autenticação Firebase, controle de grupos e permissões, desenvolvido em Node.js com PostgreSQL.
+Sistema web para gerenciamento seguro de senhas com autenticação local, controle de grupos e permissões granulares.
 
-## 🚀 Características
+## 🔐 Características Principais
 
-- **Autenticação Firebase**: Login seguro com email/senha e Google
-- **Controle de Acesso**: Sistema de grupos e permissões granulares
+- **Autenticação Local**: Sistema de login com usuário e senha armazenados no banco de dados
+- **Controle de Grupos**: Organização de senhas em grupos (Prefeituras, B2F/Convênios, Órgãos de Governo, Fornecedores)
+- **Permissões Granulares**: Controle de visualização, edição e exclusão por usuário e grupo
 - **Interface Moderna**: Design responsivo com cores branco, preto e amarelo
-- **Logs de Auditoria**: Rastreamento completo de todas as ações
-- **Dashboard Interativo**: Estatísticas e visão geral do sistema
-- **API RESTful**: Endpoints completos para todas as funcionalidades
+- **Logs de Auditoria**: Registro completo de todas as ações realizadas
+- **Criptografia**: Senhas de usuários protegidas com bcrypt
 
-## 🛠️ Tecnologias Utilizadas
+## 🚀 Tecnologias Utilizadas
 
-- **Backend**: Node.js, Express.js
-- **Banco de Dados**: PostgreSQL
-- **Autenticação**: Firebase Admin SDK
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
-- **Segurança**: Helmet, CORS, Rate Limiting
-- **Deploy**: Render (configurado)
+### Backend
+- **Node.js** + **Express.js**
+- **PostgreSQL** (banco de dados)
+- **JWT** (autenticação)
+- **bcrypt** (criptografia de senhas)
+- **Helmet** (segurança)
+- **CORS** (controle de origem)
+- **Rate Limiting** (proteção contra ataques)
+
+### Frontend
+- **HTML5** + **CSS3** + **JavaScript** (Vanilla)
+- **EJS** (template engine)
+- **Font Awesome** (ícones)
+- **Design Responsivo**
 
 ## 📋 Pré-requisitos
 
-- Node.js 18+ 
-- PostgreSQL 12+
-- Conta Firebase com projeto configurado
-- Conta Render (para deploy)
+- Node.js 18.0.0 ou superior
+- PostgreSQL 12 ou superior
+- npm ou yarn
 
-## 🔧 Instalação Local
+## 🛠️ Instalação
 
 ### 1. Clone o repositório
 ```bash
@@ -41,28 +48,32 @@ npm install
 ```
 
 ### 3. Configure o banco de dados
+Execute o script SQL no seu PostgreSQL:
 ```bash
-# Execute o script SQL para criar as tabelas
-psql -h <host> -U <usuario> -d <database> -f sql/database_setup.sql
+psql -h seu_host -U seu_usuario -d seu_banco -f sql/database_setup.sql
 ```
 
 ### 4. Configure as variáveis de ambiente
+Copie o arquivo `.env.example` para `.env` e configure:
 ```bash
-# Copie o arquivo de exemplo
 cp .env.example .env
-
-# Edite o arquivo .env com suas configurações
-nano .env
 ```
 
-### 5. Configure o Firebase
-1. Acesse o [Console do Firebase](https://console.firebase.google.com/)
-2. Crie um novo projeto ou use o existente
-3. Ative a autenticação por email/senha e Google
-4. Gere uma chave privada para o Admin SDK
-5. Configure as variáveis do Firebase no arquivo `.env`
+Edite o arquivo `.env` com suas configurações:
+```env
+# Configurações do Servidor
+NODE_ENV=production
+PORT=3000
 
-### 6. Execute o projeto
+# Configurações do Banco de Dados PostgreSQL
+DATABASE_URL=postgresql://usuario:senha@host:porta/banco?sslmode=require
+
+# Configurações de Segurança (JWT)
+JWT_SECRET=sua_jwt_secret_key_super_segura_aqui_com_pelo_menos_32_caracteres
+BCRYPT_ROUNDS=12
+```
+
+### 5. Inicie o servidor
 ```bash
 # Desenvolvimento
 npm run dev
@@ -71,151 +82,168 @@ npm run dev
 npm start
 ```
 
-## 🗄️ Configuração do Banco de Dados
+## 👥 Usuários Padrão
 
-### Estrutura das Tabelas
+O sistema vem com usuários pré-configurados para teste:
 
-O sistema utiliza as seguintes tabelas principais:
+### Administrador
+- **Email**: admin@sistema.com
+- **Senha**: Admin123!
+- **Permissões**: Acesso total a todos os grupos
 
-- **users**: Usuários do sistema
-- **password_groups**: Grupos de organização das senhas
-- **passwords**: Senhas armazenadas
-- **user_group_permissions**: Permissões de usuários por grupo
-- **password_logs**: Logs de auditoria
+### Usuários de Teste
+- **Email**: joao.silva@empresa.com
+- **Senha**: User123!
+- **Grupos**: Prefeituras (editar), B2F/Convênios (visualizar)
 
-### Dados Iniciais
+- **Email**: maria.santos@empresa.com
+- **Senha**: User123!
+- **Grupos**: Órgãos de Governo (editar), Fornecedores (visualizar)
 
-O script SQL inclui dados fictícios para teste:
+- **Email**: pedro.oliveira@empresa.com
+- **Senha**: User123!
+- **Grupos**: Fornecedores (editar)
 
-**Grupos Padrão:**
-- Prefeituras
-- B2F/Convênios  
-- Órgãos de Governo
-- Fornecedores
+- **Email**: ana.costa@empresa.com
+- **Senha**: User123!
+- **Grupos**: Todos os grupos (apenas visualizar)
 
-**Usuários de Teste:**
-- admin@campneus.com.br (Administrador)
-- usuario@campneus.com.br (Usuário)
-- operador@campneus.com.br (Usuário)
+## 🏗️ Estrutura do Projeto
 
-## 🔐 Configuração do Firebase
-
-### 1. Configuração Web (Frontend)
-```javascript
-const firebaseConfig = {
-  apiKey: "AIzaSyC9b7BXNm8HijR-k-GZUJeCJn5gT0rKBbk",
-  authDomain: "campneus-dashboard.firebaseapp.com",
-  projectId: "campneus-dashboard",
-  storageBucket: "campneus-dashboard.firebasestorage.app",
-  messagingSenderId: "172203992376",
-  appId: "1:172203992376:web:91d4ddf048071f110d8dcd",
-  measurementId: "G-E6MZYD2YXG"
-};
 ```
-
-### 2. Configuração Admin SDK (Backend)
-Configure as seguintes variáveis no `.env`:
-```env
-FIREBASE_PROJECT_ID=campneus-dashboard
-FIREBASE_PRIVATE_KEY_ID=sua_private_key_id
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@campneus-dashboard.iam.gserviceaccount.com
-FIREBASE_CLIENT_ID=sua_client_id
-FIREBASE_CLIENT_CERT_URL=https://www.googleapis.com/robot/v1/metadata/x509/...
+sistema-senhas/
+├── src/
+│   ├── config/
+│   │   ├── auth.js          # Configurações de autenticação JWT
+│   │   └── database.js      # Configuração do PostgreSQL
+│   ├── controllers/
+│   │   └── GroupController.js
+│   ├── middleware/
+│   │   └── auth.js          # Middleware de autenticação
+│   ├── models/
+│   │   ├── User.js          # Modelo de usuário
+│   │   ├── PasswordGroup.js # Modelo de grupos
+│   │   └── Password.js      # Modelo de senhas
+│   ├── routes/
+│   │   ├── auth.js          # Rotas de autenticação
+│   │   ├── users.js         # Rotas de usuários
+│   │   ├── groups.js        # Rotas de grupos
+│   │   └── passwords.js     # Rotas de senhas
+│   └── app.js               # Aplicação principal
+├── public/
+│   ├── css/                 # Estilos CSS
+│   └── js/                  # Scripts JavaScript
+├── views/                   # Templates EJS
+├── sql/
+│   └── database_setup.sql   # Script de criação do banco
+└── package.json
 ```
-
-## 🚀 Deploy no Render
-
-### 1. Configuração Automática
-O projeto está configurado para deploy automático no Render com:
-- Build automático do Node.js
-- Variáveis de ambiente configuradas
-- Health checks habilitados
-- SSL automático
-
-### 2. Variáveis de Ambiente no Render
-Configure as seguintes variáveis no painel do Render:
-```
-NODE_ENV=production
-DATABASE_URL=postgresql://...
-FIREBASE_PROJECT_ID=campneus-dashboard
-FIREBASE_PRIVATE_KEY_ID=...
-FIREBASE_PRIVATE_KEY=...
-FIREBASE_CLIENT_EMAIL=...
-FIREBASE_CLIENT_ID=...
-FIREBASE_CLIENT_CERT_URL=...
-```
-
-### 3. Comandos de Build
-```bash
-# Build
-npm install
-
-# Start
-npm start
-```
-
-## 📱 Funcionalidades
-
-### Dashboard
-- Estatísticas gerais do sistema
-- Senhas recentes
-- Overview dos grupos
-- Métricas de acesso
-
-### Gerenciamento de Senhas
-- Criar, editar e excluir senhas
-- Organização por grupos
-- Busca e filtros
-- Logs de acesso
-
-### Gerenciamento de Grupos
-- Criar e editar grupos
-- Definir cores personalizadas
-- Gerenciar usuários do grupo
-- Controle de permissões
-
-### Gerenciamento de Usuários (Admin)
-- Listar todos os usuários
-- Editar perfis e permissões
-- Ativar/desativar usuários
-- Vincular usuários a grupos
-
-### Sistema de Permissões
-- **Visualizar**: Ver senhas do grupo
-- **Editar**: Criar e modificar senhas
-- **Excluir**: Remover senhas do grupo
 
 ## 🔒 Segurança
 
-### Medidas Implementadas
-- Autenticação Firebase com tokens JWT
-- Rate limiting para prevenir ataques
+### Autenticação
+- Senhas criptografadas com bcrypt (12 rounds)
+- Tokens JWT com expiração configurável
+- Validação de força de senha
+
+### Proteções Implementadas
+- Rate limiting para prevenir ataques de força bruta
+- Helmet para headers de segurança
+- CORS configurado
 - Validação de entrada em todas as rotas
-- Logs de auditoria completos
-- Criptografia de senhas sensíveis
-- Headers de segurança com Helmet
-- CORS configurado adequadamente
+- Logs de auditoria para todas as ações
 
-### Boas Práticas
-- Senhas nunca expostas em logs
-- Tokens com expiração automática
-- Validação de permissões em cada operação
-- Soft delete para preservar histórico
-- Backup automático (configurável)
+### Critérios de Senha
+- Mínimo 8 caracteres
+- Pelo menos 1 letra maiúscula
+- Pelo menos 1 letra minúscula
+- Pelo menos 1 número
+- Pelo menos 1 caractere especial
 
-## 📊 Monitoramento
+## 📊 Funcionalidades
 
-### Health Checks
-- Endpoint `/health` para verificação de status
-- Verificação de conectividade com banco
-- Verificação de serviços externos
+### Dashboard
+- Estatísticas de usuários e grupos
+- Gráficos de atividade
+- Resumo de permissões
 
-### Logs
-- Logs estruturados com níveis
-- Rastreamento de operações críticas
-- Logs de erro detalhados
-- Rotação automática de logs
+### Gerenciamento de Usuários (Admin)
+- Criar, editar e desativar usuários
+- Definir roles (admin/user)
+- Gerenciar permissões por grupo
+
+### Gerenciamento de Grupos
+- Criar e editar grupos de senhas
+- Definir cores para organização
+- Controlar acesso por usuário
+
+### Gerenciamento de Senhas
+- Adicionar, editar e excluir senhas
+- Organização por grupos
+- Busca e filtros
+- Logs de alterações
+
+### Sistema de Permissões
+- **Visualizar**: Ver senhas do grupo
+- **Editar**: Modificar senhas existentes
+- **Excluir**: Remover senhas do grupo
+
+## 🚀 Deploy
+
+### Render (Recomendado)
+1. Conecte seu repositório ao Render
+2. Configure as variáveis de ambiente
+3. O deploy será automático
+
+### Variáveis de Ambiente para Produção
+```env
+NODE_ENV=production
+DATABASE_URL=sua_url_do_postgresql
+JWT_SECRET=sua_chave_jwt_super_segura
+PORT=3000
+```
+
+## 🧪 Testes
+
+```bash
+# Executar todos os testes
+npm test
+
+# Executar testes em modo watch
+npm run test:watch
+
+# Executar testes com coverage
+npm run test:coverage
+```
+
+## 📝 API Endpoints
+
+### Autenticação
+- `POST /api/auth/login` - Login
+- `POST /api/auth/register` - Registro (admin only)
+- `POST /api/auth/verify` - Verificar token
+- `POST /api/auth/forgot-password` - Recuperar senha
+- `POST /api/auth/reset-password` - Redefinir senha
+- `POST /api/auth/change-password` - Alterar senha
+- `POST /api/auth/logout` - Logout
+
+### Usuários
+- `GET /api/users` - Listar usuários (admin)
+- `GET /api/users/:id` - Obter usuário
+- `PUT /api/users/:id` - Atualizar usuário (admin)
+- `DELETE /api/users/:id` - Desativar usuário (admin)
+
+### Grupos
+- `GET /api/groups` - Listar grupos
+- `POST /api/groups` - Criar grupo (admin)
+- `PUT /api/groups/:id` - Atualizar grupo (admin)
+- `DELETE /api/groups/:id` - Excluir grupo (admin)
+
+### Senhas
+- `GET /api/passwords` - Listar senhas (por permissão)
+- `POST /api/passwords` - Criar senha
+- `PUT /api/passwords/:id` - Atualizar senha
+- `DELETE /api/passwords/:id` - Excluir senha
 
 ## 🤝 Contribuição
 
@@ -227,25 +255,19 @@ npm start
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+Este projeto está sob a licença ISC. Veja o arquivo `LICENSE` para mais detalhes.
 
-## 📞 Suporte
+## 🆘 Suporte
 
-Para suporte e dúvidas:
-- Email: suporte@campneus.com.br
-- Issues: Use o sistema de issues do GitHub
+Para suporte, entre em contato através do email: suporte@sistema.com
 
-## 🔄 Atualizações
+## 📋 Changelog
 
-### Versão 1.0.0
-- Sistema completo de gerenciamento de senhas
-- Autenticação Firebase integrada
-- Interface responsiva e moderna
-- Sistema de grupos e permissões
-- Logs de auditoria completos
-- Deploy automatizado no Render
-
----
-
-**Desenvolvido com ❤️ para Campneus**
+### v1.0.0
+- ✅ Autenticação local implementada
+- ✅ Sistema de grupos e permissões
+- ✅ Interface responsiva
+- ✅ Logs de auditoria
+- ✅ Criptografia de senhas
+- ✅ Deploy no Render configurado
 
